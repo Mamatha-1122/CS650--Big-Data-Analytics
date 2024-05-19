@@ -1,63 +1,80 @@
-# Load necessary libraries if not already loaded
-# install.packages("ggplot2") # Uncomment and run if you haven't installed ggplot2
-# install.packages("dplyr")   # Uncomment and run if you haven't installed dplyr
+data <- read.csv(file.choose())
+head(data)
+
+
+# Data Exploration
+summary(data)
+str(data)
+head(data)
+
+# Load necessary libraries
 library(ggplot2)
 library(dplyr)
 
-# Load the heart disease dataset
-heart_disease_data <- read.csv("C:/Users/chand/Downloads/heart disease.csv/heart disease.csv", header = TRUE)
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
 
-# Summary of the data
-summary(heart_disease_data)
+# Read the dataset
+data <- read.csv("C:/Users/konga/Downloads/winequality-red.csv")
 
-# Perform linear regression
-# Replace "dependent_var" with the name of the dependent variable column
-# Replace "independent_var1" and "independent_var2" with the names of independent variables
-linear_model <- lm(target ~ age + sex + cp + trestbps + chol + fbs + restecg + thalach + exang + oldpeak + slope + ca + thal, data = heart_disease_data)
+# Data Exploration
+summary(data)
+str(data)
+head(data)
 
-# Summary of the linear regression model
+# Linear Regression
+linear_model <- lm(quality ~ ., data = data)
 summary(linear_model)
 
-# Perform logistic regression
-# Assuming "target" is the binary outcome variable
-logistic_model <- glm(target ~ age + sex + cp + trestbps + chol + fbs + restecg + thalach + exang + oldpeak + slope + ca + thal, data = heart_disease_data, family = binomial)
+# Visualization for Linear Regression
+plot_linear <- ggplot(data, aes(x = quality, y = fitted(linear_model))) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "blue") +
+  labs(title = "Linear Regression: Observed vs Fitted", x = "Observed Quality", y = "Fitted Quality")
 
-# Summary of the logistic regression model
+# Logistic Regression (example with binary quality)
+data$quality_binary <- ifelse(data$quality >= 6, 1, 0)  # Example threshold for binary quality
+logistic_model <- glm(quality_binary ~ ., data = data, family = binomial)
 summary(logistic_model)
 
-# Perform polynomial regression
-# For example, let's create a quadratic polynomial model for age
-polynomial_model <- lm(target ~ poly(age, 2) + sex + cp + trestbps + chol + fbs + restecg + thalach + exang + oldpeak + slope + ca + thal, data = heart_disease_data)
+# Visualization for Logistic Regression
+fitted_values <- predict(logistic_model, type = "response")
+plot_logistic <- ggplot(data, aes(x = fitted_values, y = quality_binary)) +
+  geom_point() +
+  geom_smooth(method = "loess", se = FALSE, color = "green") +
+  labs(title = "Logistic Regression: Observed vs Fitted", x = "Fitted Probability", y = "Observed Quality")
 
-# Summary of the polynomial regression model
-summary(polynomial_model)
+# Polynomial Regression (example with quadratic term)
+poly_model <- lm(quality ~ poly(pH, 2), data = data)  # Example with pH squared
+summary(poly_model)
+
+# Visualization for Polynomial Regression
+plot_poly <- ggplot(data, aes(x = pH, y = quality)) +
+  geom_point() +
+  geom_smooth(method = "lm", formula = y ~ poly(x, 2), se = FALSE, color = "red") +
+  labs(title = "Polynomial Regression: pH vs Quality", x = "pH", y = "Quality")
+
+# Display the plots
+plot_linear
+plot_logistic
+plot_poly
 
 
-# Visualize linear regression
-# Actual vs. Predicted values
-linear_predicted <- predict(linear_model)
-plot(heart_disease_data$target, linear_predicted, main = "Linear Regression: Actual vs. Predicted", xlab = "Actual", ylab = "Predicted")
-abline(0, 1)
+# Residuals vs. Fitted Values Plot
+residuals_vs_fitted <- ggplot(data, aes(x = fitted(linear_model), y = resid(linear_model))) +
+  geom_point() +
+  geom_hline(yintercept = 0, color = "red") +
+  labs(title = "Residuals vs. Fitted Values", x = "Fitted Values", y = "Residuals")
 
-# Diagnostic plots
-par(mfrow = c(2, 2))
-plot(linear_model)
+# Q-Q Plot
+qq_plot <- ggplot(data, aes(sample = resid(linear_model))) +
+  geom_qq() +
+  geom_qq_line() +
+  labs(title = "Q-Q Plot of Residuals")
 
-# Visualize logistic regression
-# Predicted probabilities
-logistic_probs <- predict(logistic_model, type = "response")
-plot(heart_disease_data$target, logistic_probs, main = "Logistic Regression: Actual vs. Predicted Probabilities", xlab = "Actual", ylab = "Predicted Probability")
+# Display the plots
+residuals_vs_fitted
+qq_plot
 
-# Diagnostic plots
-par(mfrow = c(2, 2))
-plot(logistic_model)
 
-# Visualize polynomial regression
-# Actual vs. Predicted values
-polynomial_predicted <- predict(polynomial_model)
-plot(heart_disease_data$target, polynomial_predicted, main = "Polynomial Regression: Actual vs. Predicted", xlab = "Actual", ylab = "Predicted")
-abline(0, 1)
-
-# Diagnostic plots
-par(mfrow = c(2, 2))
-plot(polynomial_model)
